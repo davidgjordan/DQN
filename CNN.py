@@ -25,6 +25,7 @@ class ConvNet(object):
         self.weights_fc = None
         self.create_conv_variables()
         self.hypothesis = self.create_hypothesis()
+        self.weights = self.biases_conv + self.weights_conv + self.biases_fc + self.weights_fc
 
     def create_hypothesis(self):
         return self.fc_feedforward(self.convolutional_feedforward(self.x))
@@ -102,14 +103,11 @@ class ConvNet(object):
                                for layer, (i, j) in enumerate(zip(sizes[:-1], sizes[1:]))]
 
     # update weights and biases of self to those of another network
-    def update(self, net):
+    def update_to(self, net):
         for w_target, b_target, w, b in zip(self.weights_conv, self.biases_conv, net.weights_conv, net.biases_conv):
             tf.assign(w_target, w)
             tf.assign(b_target, b)
         for w_target, b_target, w, b in zip(self.weights_fc, self.biases_fc, net.weights_fc, net.biases_fc):
             tf.assign(w_target, w)
             tf.assign(b_target, b)
-
-    def get_vars(self):
-        return self.biases_conv + self.weights_conv + self.biases_fc + self.weights_fc
 

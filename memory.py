@@ -10,8 +10,6 @@ class ReplayMemory:
         self.memory = deque(maxlen=capacity)
         
     def insert(self, experience):
-        if len(self.memory) >= self.memory.maxlen:
-            self.memory.popleft()
         self.memory.append(experience)
 
     def draw(self):

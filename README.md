@@ -8,7 +8,9 @@ An extensible `tensorflow`/`gym` based implementation of the deep Q-network with
 
 The result of training for 4m time steps using a Tesla K80 GPU:
 
-<video src="logs/gym/openaigym.video.0.15576.video000000.mp4" width="160" height="210" controls preload></video>
+<br>
+![breakout](breakout.gif)
+<br>
 
 ### TODO
 

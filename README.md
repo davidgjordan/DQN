@@ -6,7 +6,7 @@ An extensible `tensorflow`/`gym` based implementation of the deep Q-network with
 
 ### Results
 
-The result of training for 4m time steps using a Tesla K80 GPU:
+The result of training for 6m time steps using a Tesla K80 GPU:
 
 <br>
 ![breakout](breakout.gif)

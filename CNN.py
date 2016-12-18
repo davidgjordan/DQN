@@ -102,12 +102,4 @@ class ConvNet(object):
             self.weights_fc = [self.rand_variable([i, j], name='weights_fc{}'.format(layer+1))
                                for layer, (i, j) in enumerate(zip(sizes[:-1], sizes[1:]))]
 
-    # update weights and biases of self to those of another network
-    def update_to(self, net):
-        for w_target, b_target, w, b in zip(self.weights_conv, self.biases_conv, net.weights_conv, net.biases_conv):
-            tf.assign(w_target, w)
-            tf.assign(b_target, b)
-        for w_target, b_target, w, b in zip(self.weights_fc, self.biases_fc, net.weights_fc, net.biases_fc):
-            tf.assign(w_target, w)
-            tf.assign(b_target, b)
 

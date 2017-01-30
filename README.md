@@ -4,6 +4,12 @@
 
 An extensible `tensorflow`/`gym` based implementation of the deep Q-network with experience replay as presented in [Human-level control through deep reinforcement learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html).
 
+### Algorithm
+
+<br>
+![algorithm](algorithm.png)
+<br>
+
 ### Results
 
 The result of training for 6m time steps using a Tesla K80 GPU:

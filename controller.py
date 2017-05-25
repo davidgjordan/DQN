@@ -168,10 +168,10 @@ class Controller(object):
         with tf.name_scope('loss'):
             Q_target = self.create_target()
             Q_train = self.create_train()
-            with tf.name_scope('average_squared_error'):
-                average_squared_error = tf.reduce_mean(tf.squared_difference(Q_target, Q_train))
-            tf.summary.scalar("loss", average_squared_error)
-        return average_squared_error
+            with tf.name_scope('average_clipped_error'):
+                average_clipped_error = tf.reduce_mean(clipped_error(Q_target - Q_train))
+            tf.summary.scalar("loss", average_clipped_error)
+        return average_clipped_error
 
     def create_target(self):
         with tf.name_scope('Q_target'):
@@ -223,3 +223,7 @@ class Controller(object):
             reward_ph = tf.placeholder(tf.float32, [None], name='reward')
             terminal_ph = tf.placeholder(tf.bool, [None], name='terminal')
         return action_ph, reward_ph, terminal_ph
+
+    @staticmethod
+    def clipped_error(x):
+        return tf.where(tf.abs(x) < 1.0, 0.5 * tf.square(x), tf.abs(x) - 0.5)

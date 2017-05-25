@@ -169,7 +169,7 @@ class Controller(object):
             Q_target = self.create_target()
             Q_train = self.create_train()
             with tf.name_scope('average_clipped_error'):
-                average_clipped_error = tf.reduce_mean(clipped_error(Q_target - Q_train))
+                average_clipped_error = tf.reduce_mean(self.clipped_error(Q_target - Q_train))
             tf.summary.scalar("loss", average_clipped_error)
         return average_clipped_error
 

@@ -143,7 +143,7 @@ class Controller(object):
         self.saver.restore(session, ckpt.model_checkpoint_path)
         self.session = session
         self.environment = gym.make(environment_name)
-        self.environment.monitor.start('logs/gym', force=True)
+        self.environment.monitor.start('logs/gym', force=True, video_callable=lambda x: True)
         self.environment.reset()
         print 'Playing the game...'
         for t in xrange(num_steps):
@@ -157,11 +157,11 @@ class Controller(object):
     # Helper methods
     def prepare_controller(self, environment_name, session):
         self.session = session
-        self.writer = tf.train.SummaryWriter('logs/Controller', session.graph)
-        self.merged = tf.merge_all_summaries()
+        self.writer = tf.summary.FileWriter('logs/Controller', session.graph)
+        self.merged = tf.summary.merge_all()
         self.environment = gym.make(environment_name)
         self.initialize_memory()
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
         self.session.run(init)
 
     def create_scalar_loss(self):
@@ -170,20 +170,20 @@ class Controller(object):
             Q_train = self.create_train()
             with tf.name_scope('average_squared_error'):
                 average_squared_error = tf.reduce_mean(tf.squared_difference(Q_target, Q_train))
-            tf.scalar_summary("loss", average_squared_error)
+            tf.summary.scalar("loss", average_squared_error)
         return average_squared_error
 
     def create_target(self):
         with tf.name_scope('Q_target'):
-            Q_max = tf.reduce_max(self.target_net.hypothesis, reduction_indices=1, name='Q_max')
+            Q_max = tf.reduce_max(self.target_net.hypothesis, axis=1, name='Q_max')
             with tf.name_scope('check_terminal_condition'):
-                Q_target = tf.select(self.terminals, self.rewards, self.discount_factor * Q_max + self.rewards)
+                Q_target = tf.where(self.terminals, self.rewards, self.discount_factor * Q_max + self.rewards)
         return Q_target
 
     def create_train(self):
         with tf.name_scope('Q_train'):
             one_hot_actions = tf.one_hot(self.actions, self.num_actions, 1.0, 0.0, name='one_hot_actions')
-            Q_train = tf.reduce_sum(tf.mul(self.predictor_net.hypothesis, one_hot_actions), reduction_indices=1)
+            Q_train = tf.reduce_sum(tf.multiply(self.predictor_net.hypothesis, one_hot_actions), axis=1)
         return Q_train
 
     def create_feed_dict(self, batch):

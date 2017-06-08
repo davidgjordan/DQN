@@ -1,10 +1,11 @@
-import tensorflow as tf
 import gym
+import numpy as np
+import random
+import tensorflow as tf
+
+from CNN import ConvNet
 from memory import ReplayMemory
 from state import State
-from CNN import ConvNet
-import random
-import numpy as np
 
 
 class Controller(object):
@@ -60,7 +61,7 @@ class Controller(object):
     def train(self, environment_name, session):
         self.prepare_controller(environment_name, session)
         self.episode = 0
-        print 'Training by minibatch gradient descent...'
+        print('Training by minibatch gradient descent...')
         for t in xrange(self.train_steps):
             epsilon = self.annealed_epsilon(t)
             self.follow_policy(epsilon)
@@ -104,7 +105,7 @@ class Controller(object):
         self.session.run(self.train_step, feed_dict=feed_dict)
         if self.record_loss and time_step % 10000 is 0:
             summary, loss = self.session.run([self.merged, self.loss], feed_dict=feed_dict)
-            print time_step, loss
+            print(time_step, loss)
             self.writer.add_summary(summary, time_step)
 
     def annealed_epsilon(self, time_step):
@@ -120,10 +121,10 @@ class Controller(object):
     def save_weights(self, time_step):
         if time_step % self.check_point_steps is 0:
             self.saver.save(self.session, 'logs/checkpoints' + 'model.ckpt', global_step=time_step)
-            print time_step, 'checkpoint reached'
+            print(time_step, 'checkpoint reached')
 
     def initialize_memory(self):
-        print 'Populating replay memory with random experiences...'
+        print('Populating replay memory with random experiences...')
         self.environment.reset()
         t = 1
         while self.memory.len() < self.replay_capacity:
@@ -145,7 +146,7 @@ class Controller(object):
         self.environment = gym.make(environment_name)
         self.environment.monitor.start('logs/gym', force=True, video_callable=lambda x: True)
         self.environment.reset()
-        print 'Playing the game...'
+        print('Playing the game...')
         for t in xrange(num_steps):
             self.environment.render()
             action = self.choose_action(epsilon)
@@ -212,7 +213,7 @@ class Controller(object):
     def calculate_average_reward(self):
         self.episode += 1
         if self.episode % 100 is 0:
-            print 'reward per 100 episodes', self.score / self.episode
+            print('reward per 100 episodes', self.score / self.episode)
             self.score = 0
             self.episode = 0
 

@@ -1,4 +1,5 @@
 import numpy as np
+
 from skimage.color import rgb2gray
 from skimage.transform import resize
 
@@ -17,4 +18,6 @@ class State:
 
     @staticmethod
     def pre_process(observation, height, width):
-        return np.uint8(resize(rgb2gray(observation), (width, height))*255)
+        return np.uint8(resize(image=rgb2gray(observation),
+                               output_shape=(height, width),
+                               mode='constant')*255)

@@ -1,5 +1,5 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 
 class ConvNet(object):
@@ -36,7 +36,7 @@ class ConvNet(object):
         return self.input_to_fc_layers(h)
 
     def fc_feedforward(self, h):
-        for (w, b) in zip(self.weights_fc, self.biases_fc)[:-1]:
+        for (w, b) in list(zip(self.weights_fc, self.biases_fc))[:-1]:
             h = self.create_fc_layer(h, w, b)
         # treat final layer separately
         h = self.create_fc_layer(h, self.weights_fc[-1], self.biases_fc[-1], apply_relu=False)

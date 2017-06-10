@@ -12,7 +12,7 @@ class Controller(object):
     def __init__(self, height, width, agent_history_length, num_filters, filter_shapes, filter_strides,
                  fc_hidden_units, num_actions, replay_capacity, mini_batch_size, target_update_frequency, display,
                  train_steps, epsilon_initial, epsilon_final, annealing_steps, learning_rate, discount_factor,
-                 gradient_descent_frequency, momentum, rms_decay, record_loss, check_point_steps):
+                 gradient_descent_frequency, log_directory, record_loss, check_point_steps):
 
         self.height = height
         self.width = width
@@ -28,9 +28,8 @@ class Controller(object):
         self.discount_factor = discount_factor
         self.mini_batch_size = mini_batch_size
         self.learning_rate = learning_rate
-        self.rms_decay = rms_decay
-        self.momentum = momentum
         self.gradient_descent_frequency = gradient_descent_frequency
+        self.log_directory = log_directory
         self.target_update_frequency = target_update_frequency
         self.record_loss = record_loss
         self.check_point_steps = check_point_steps
@@ -62,7 +61,7 @@ class Controller(object):
         self.prepare_controller(environment_name, session)
         self.episode = 0
         print('Training by minibatch gradient descent...')
-        for t in xrange(self.train_steps):
+        for t in range(self.train_steps):
             epsilon = self.annealed_epsilon(t)
             self.follow_policy(epsilon)
             self.gradient_descent(t)
@@ -120,7 +119,7 @@ class Controller(object):
 
     def save_weights(self, time_step):
         if time_step % self.check_point_steps is 0:
-            self.saver.save(self.session, 'logs/checkpoints' + 'model.ckpt', global_step=time_step)
+            self.saver.save(sess=self.session, save_path=self.log_directory + 'checkpoints' + 'model.ckpt', global_step=time_step)
             print(time_step, 'checkpoint reached')
 
     def initialize_memory(self):
@@ -140,14 +139,14 @@ class Controller(object):
             self.record_experience(action, reward, terminal)
 
     def play(self, environment_name, session, epsilon, num_steps):
-        ckpt = tf.train.get_checkpoint_state('logs')
+        ckpt = tf.train.get_checkpoint_state(checkpoint_dir=self.log_directory)
         self.saver.restore(session, ckpt.model_checkpoint_path)
         self.session = session
         self.environment = gym.make(environment_name)
-        self.environment.monitor.start('logs/gym', force=True, video_callable=lambda x: True)
+        self.environment.monitor.start(self.log_directory + 'gym', force=True, video_callable=lambda x: True)
         self.environment.reset()
         print('Playing the game...')
-        for t in xrange(num_steps):
+        for t in range(num_steps):
             self.environment.render()
             action = self.choose_action(epsilon)
             reward, terminal = self.observe_reward(action)
@@ -158,7 +157,7 @@ class Controller(object):
     # Helper methods
     def prepare_controller(self, environment_name, session):
         self.session = session
-        self.writer = tf.summary.FileWriter('logs/Controller', session.graph)
+        self.writer = tf.summary.FileWriter(self.log_directory + 'Controller', session.graph)
         self.merged = tf.summary.merge_all()
         self.environment = gym.make(environment_name)
         self.initialize_memory()
@@ -201,11 +200,13 @@ class Controller(object):
 
     def create_train_step(self):
         with tf.name_scope('train'):
-            return tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
-                                             decay=self.rms_decay,
-                                             momentum=self.momentum,
-                                             epsilon=1e-6). \
+            return tf.train.AdamOptimizer(learning_rate=self.learning_rate, epsilon=1e-4).\
                 minimize(self.loss, var_list=self.predictor_net.weights)
+            # return tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
+            #                                  decay=self.rms_decay,
+            #                                  momentum=self.momentum,
+            #                                  epsilon=1e-6). \
+            #     minimize(self.loss, var_list=self.predictor_net.weights)
 
     def update_target_net(self):
         self.session.run(self.update_target_op)

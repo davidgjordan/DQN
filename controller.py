@@ -119,7 +119,9 @@ class Controller(object):
 
     def save_weights(self, time_step):
         if time_step % self.check_point_steps is 0:
-            self.saver.save(sess=self.session, save_path=self.log_directory + 'checkpoints' + 'model.ckpt', global_step=time_step)
+            self.saver.save(sess=self.session,
+                            save_path=self.log_directory + 'checkpoints' + 'model.ckpt',
+                            global_step=time_step)
             print(time_step, 'checkpoint reached')
 
     def initialize_memory(self):
@@ -143,7 +145,7 @@ class Controller(object):
         self.saver.restore(session, ckpt.model_checkpoint_path)
         self.session = session
         self.environment = gym.make(environment_name)
-        self.environment.monitor.start(self.log_directory + 'gym', force=True, video_callable=lambda x: True)
+        self.environment = gym.wrappers.Monitor(self.environment, self.log_directory + 'gym', force=True, video_callable=lambda x: True)
         self.environment.reset()
         print('Playing the game...')
         for t in range(num_steps):
@@ -152,7 +154,6 @@ class Controller(object):
             reward, terminal = self.observe_reward(action)
             if terminal:
                 self.environment.reset()
-        self.environment.monitor.end()
 
     # Helper methods
     def prepare_controller(self, environment_name, session):
@@ -202,11 +203,6 @@ class Controller(object):
         with tf.name_scope('train'):
             return tf.train.AdamOptimizer(learning_rate=self.learning_rate, epsilon=1e-4).\
                 minimize(self.loss, var_list=self.predictor_net.weights)
-            # return tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
-            #                                  decay=self.rms_decay,
-            #                                  momentum=self.momentum,
-            #                                  epsilon=1e-6). \
-            #     minimize(self.loss, var_list=self.predictor_net.weights)
 
     def update_target_net(self):
         self.session.run(self.update_target_op)

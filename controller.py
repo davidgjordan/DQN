@@ -145,7 +145,9 @@ class Controller(object):
         self.saver.restore(session, ckpt.model_checkpoint_path)
         self.session = session
         self.environment = gym.make(environment_name)
-        self.environment = gym.wrappers.Monitor(self.environment, self.log_directory + 'gym', force=True, video_callable=lambda x: True)
+        self.environment = gym.wrappers.Monitor(self.environment, self.log_directory + 'gym',
+                                                force=True,
+                                                video_callable=lambda x: True)
         self.environment.reset()
         print('Playing the game...')
         for t in range(num_steps):
@@ -176,7 +178,8 @@ class Controller(object):
 
     def create_target(self):
         with tf.name_scope('Q_target'):
-            Q_max = tf.reduce_max(self.target_net.hypothesis, axis=1, name='Q_max')
+            one_hot_actions = tf.one_hot(tf.argmax(self.predictor_net.hypothesis, axis=1), self.num_actions, 1.0, 0.0)
+            Q_max = tf.reduce_sum(tf.multiply(self.predictor_net.hypothesis, one_hot_actions), axis=1)
             with tf.name_scope('check_terminal_condition'):
                 Q_target = tf.where(self.terminals, self.rewards, self.discount_factor * Q_max + self.rewards)
         return Q_target
@@ -201,8 +204,10 @@ class Controller(object):
 
     def create_train_step(self):
         with tf.name_scope('train'):
-            return tf.train.AdamOptimizer(learning_rate=self.learning_rate, epsilon=1e-4).\
-                minimize(self.loss, var_list=self.predictor_net.weights)
+            return tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
+                                             decay=0.96,
+                                             momentum=0.95,
+                                             epsilon=0.01).minimize(self.loss, var_list=self.predictor_net.weights)
 
     def update_target_net(self):
         self.session.run(self.update_target_op)
